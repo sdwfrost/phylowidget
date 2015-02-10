@@ -18,6 +18,9 @@ phylowidget <- function(nwk, width = NULL, height = NULL) {
     x,
     width = width,
     height = height,
+    sizingPolicy = htmlwidgets::sizingPolicy(viewer.suppress = TRUE,
+                                             browser.fill = TRUE,
+                                             browser.padding = 0),
     package = 'phylowidget'
   )
 }

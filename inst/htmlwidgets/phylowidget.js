@@ -10,8 +10,8 @@ HTMLWidgets.widget({
      .attr("width",width)
      .attr("height",height);
      
-    var tree=d3.layout.phylotree(el);
-    
+    var tree=d3.layout.phylotree(el).size ([height, width]).separation (function (a,b) {return 0;});
+  
     return {"svg": svg, "tree": tree};
   },
 
@@ -19,13 +19,13 @@ HTMLWidgets.widget({
     var newick_string = x.nwk;
     var svg = instance.svg;
     var tree = instance.tree;
-    var parsed_string = d3_phylotree_newick_parser(newick_string);
-    tree.node_span ('equal');
-    tree.options ({'draw-size-bubbles' : false}, false);
-    tree.font_size (14);
-    tree.scale_bar_font_size (12);
-    tree.node_circle_size (4);
-    tree.spacing_x (16, true);
+
+    tree.node_span ('equal')
+        .options ({'draw-size-bubbles' : false}, false)
+        .font_size (14)
+        .scale_bar_font_size (12)
+        .node_circle_size (4);
+
     tree(parsed_string).svg(svg).layout();
   },
 
@@ -34,4 +34,8 @@ HTMLWidgets.widget({
      .attr("width",width)
      .attr("height",height);
   }
+  
+  instance.tree.size ([height, width]).layout();
+    
+
 });

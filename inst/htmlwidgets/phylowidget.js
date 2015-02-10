@@ -33,9 +33,11 @@ HTMLWidgets.widget({
     var svg=d3.select("#"+el.id+" svg")
      .attr("width",width)
      .attr("height",height);
+     
+      instance.tree.size ([height, width]).layout();
   }
   
-  instance.tree.size ([height, width]).layout();
+ 
     
 
 });

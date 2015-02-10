@@ -1,11 +1,10 @@
 # phylowidget
 An R htmlwidgets package of [phylotree.js](https://github.com/veg/phylotree.js) by @spond and @stevenweaver
 
-To install, use:
+Since this package is not yet on CRAN, to install, use:
 
 ```
-library(devtools)
-install_git("http://github.com/sdwfrost/phylowidget.git")
+devtools::install_github("sdwfrost/phylowidget")
 ```
 
 To test:

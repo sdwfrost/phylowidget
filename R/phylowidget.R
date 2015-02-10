@@ -5,11 +5,11 @@
 #' @import htmlwidgets
 #'
 #' @export
-phylowidget <- function(message, width = NULL, height = NULL) {
+phylowidget <- function(nwk, width = NULL, height = NULL) {
 
   # forward options using x
   x = list(
-    message = message
+    nwk=nwk
   )
 
   # create widget

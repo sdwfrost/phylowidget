@@ -14,11 +14,14 @@ HTMLWidgets.widget({
   },
 
   renderValue: function(el, x, instance) {
-    var newick_string = x;
-    console.log(x);
+    var newick_string = x.nwk;
+    //console.log(x);
     var res = d3_phylotree_newick_parser(newick_string);
-    default_tree_settings(el);
-    el(res).svg (svg).layout();
+    // default_tree_settings(el);
+    console.log(res);
+    console.log(instance);
+    console.log(el);
+    instance(res).svg (d3.select("#"+el.id+" svg")).layout();
   },
 
   resize: function(el, width, height, instance) {

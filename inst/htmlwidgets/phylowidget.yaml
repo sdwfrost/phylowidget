@@ -1,0 +1,18 @@
+# (uncomment to add a dependency)
+# dependencies:
+#  - name:
+#    version:
+#    src:
+#    script:
+#    stylesheet:
+dependencies:
+ - name: d3
+   version: 3.5.4
+   src: "htmlwidgets/lib/d3-3.5.4"
+   script: d3.min.js
+
+ - name: phylotree
+   version: 0.1
+   src: "htmlwidgets/lib"
+   script: phylotree.js
+   stylesheet: phylotree.css

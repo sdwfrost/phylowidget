@@ -26,7 +26,7 @@ HTMLWidgets.widget({
         .scale_bar_font_size (12)
         .node_circle_size (4);
 
-    tree(parsed_string).svg(svg).layout();
+    tree(d3_phylotree_newick_parser(newick_string)).svg(svg).layout();
   },
 
   resize: function(el, width, height, instance) {

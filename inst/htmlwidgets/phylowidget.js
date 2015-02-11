@@ -103,8 +103,103 @@ HTMLWidgets.widget({
       .attr("id","selection_name_box")
       .attr("disabled","true");
       
+    var saveselectionspan=inputgroupcontainer.append("span")
+      .attr("class","input-group-btn")
+      .attr("id","save_selection_name")
+      .attr("style","display: none");
+      
+    saveselectionspan.append("button")
+      .attr("type","button")
+      .attr("class","btn btn-default")
+      .attr("id","cancel_selection_button")
+      .text("Cancel")
+      
+    saveselectionspan.append("button")
+      .attr("type","button")
+      .attr("class","btn btn-default")
+      .attr("id","save_selection_button")
+      .text("Save")
     
-    
+    var selectionmenu=inputgroupcontainer.append("span")
+      .attr("class","input-group-brn");
+      
+    selectionmenu.append("button")
+      .attr("type","button")
+      .attr("class","btn btn-default dropdown-toggle")
+      .attr("data-toggle","dropdown")
+      .text("Selection ")
+      .append("span")
+      .attr("class","caret");
+      
+    var selectionmenuitems=selectionmenu.append("ul")
+      .attr("class","dropdown-menu");
+      
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","filter_add")
+      .text("Add filtered nodes to selection");
+      
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","filter_remove")
+      .text("Remove filtered nodes to selection");
+
+    selectionmenuitems.append("li")
+      .attr("class","divider");
+
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","select_all_internal")
+      .text("Select all internal nodes");
+      
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","select_all_leaves")
+      .text("Select all leaf nodes");
+
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","clear_internal")
+      .text("Clear all internal nodes");
+
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","clear_leaves")
+      .text("Clear all leaves");
+
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","select_none")
+      .text("Clear selection");
+
+    selectionmenuitems.append("li")
+      .attr("class","divider");
+
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","mp_label")
+      .text("Label internal nodes using maximum parsimony");
+      
+    selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","and_label")
+      .text("Label internal nodes using conjunction (AND)");
+   
+     selectionmenuitems.append("li")
+      .append("a")
+      .attr("href","#")
+      .attr("id","or_label")
+      .text("Label internal nodes using disjunction (OR)");
+
     /* Add SVG tree container */
     
     var svg=d3.select(el).append("svg")
@@ -167,6 +262,52 @@ HTMLWidgets.widget({
 
     $("#sort_descending").on ("click", function (e) {
       sort_nodes (false);
+    });
+    
+    $("#mp_label").on ("click", function (e) {
+      tree.max_parsimony (true);
+    });
+
+
+    $("#and_label").on ("click", function (e) {
+      tree.internal_label (function (d) { return d.reduce (function (prev, curr) {return curr[current_selection_name] && prev; }, true)}, true);
+    });
+
+    $("#or_label").on ("click", function (e) {
+      tree.internal_label (function (d) { return d.reduce (function (prev, curr) {return curr[current_selection_name] || prev; }, false)}, true);
+    });
+
+    $("#filter_add").on ("click", function (e) {
+      tree.modify_selection (function (d) { return d.tag || d[current_selection_name];}, current_selection_name, false, true)
+        .modify_selection (function (d) { return false; }, "tag", false, false);
+    });
+
+    $("#filter_remove").on ("click", function (e) {
+      tree.modify_selection (function (d) { return !d.tag;});
+    });
+
+    $("#select_all").on ("click", function (e) {
+      tree.modify_selection (function (d) { return true;});
+    });
+
+    $("#select_all_internal").on ("click", function (e) {
+      tree.modify_selection (function (d) { return !d3_phylotree_is_leafnode (d.target);});
+    });
+
+    $("#select_all_leaves").on ("click", function (e) {
+      tree.modify_selection (function (d) { return d3_phylotree_is_leafnode (d.target);});
+    });
+
+    $("#select_none").on ("click", function (e) {
+      tree.modify_selection (function (d) { return false;});
+    });
+
+    $("#clear_internal").on ("click", function (e) {
+      tree.modify_selection (function (d) { return d3_phylotree_is_leafnode (d.target) ? d.target[current_selection_name] : false;});
+    });
+
+    $("#clear_leaves").on ("click", function (e) {
+      tree.modify_selection (function (d) { return !d3_phylotree_is_leafnode (d.target) ? d.target[current_selection_name] : false;});
     });
     
   },

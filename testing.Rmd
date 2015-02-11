@@ -10,7 +10,7 @@ nwk <- "(((EELA:0.150276,CONGERA:0.213019):0.230956,(EELB:0.263487,CONGERB:0.202
 phylowidget(nwk)
 ```
 
-Now try with Shiny; at the moment, this is only showing in the browser.
+Now try with Shiny (interactive code below); at the moment, this is only showing in the browser.
 
 ```{r}
 library(shiny)

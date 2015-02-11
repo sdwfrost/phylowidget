@@ -15,6 +15,11 @@ dependencies:
    script: bootstrap.min.js
    stylesheet: bootstrap.min.css
 
+ - name: fontawesome
+   version: 4.3.0
+   src: "htmlwidgets/lib"
+   stylesheet: font-awesome.css
+
  - name: phylotree
    version: 0.1
    src: "htmlwidgets/lib"

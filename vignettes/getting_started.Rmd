@@ -15,7 +15,7 @@ This vignette provides an introduction to `phylowidget` and also demonstrates ho
 
 ## First phylowidget
 
-```{r eval=F}
+```{r}
 # not working; will work on this
 library(phylowidget)
 

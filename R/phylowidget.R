@@ -7,6 +7,16 @@
 #' @export
 phylowidget <- function(nwk, width = NULL, height = NULL) {
 
+  # try to convert if not character (assuming not Newick)
+  if(class(nwk) %in% c("phylo","multiPhylo")){
+    warning( "attempting conversion to Newick format", call. = F)
+    if (requireNamespace("ape")) {
+      nwk = ape::write.tree( nwk )
+    } else {
+      stop("If not Newick format, phylowidget require ape package.  Please install ape.")
+    }
+  }
+
   # forward options using x
   x = list(
     nwk=nwk

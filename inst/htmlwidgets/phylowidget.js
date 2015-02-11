@@ -200,6 +200,25 @@ HTMLWidgets.widget({
       .attr("id","or_label")
       .text("Label internal nodes using disjunction (OR)");
 
+    /* Filtering */
+    
+    var branchfilter=inputgroupcontainer.append("div")
+      .attr("class","form-group navbar-form navbar-right")
+      .append("input")
+      .attr("type","text")
+      .attr("id","branch_filter")
+      .attr("class","form-control")
+      .attr("placeholder","Filter branches on");
+    
+    /* Some global variables */
+    
+    selection_set = ['Foreground'];
+    current_selection_name = $("#selection_name_box").val();
+    current_selection_id = 0;
+    max_selections       = 10;
+    color_scheme = d3.scale.category10();
+    selection_menu_element_action = "phylotree_menu_element_action";
+    
     /* Add SVG tree container */
     
     var svg=d3.select(el).append("svg")
@@ -208,6 +227,18 @@ HTMLWidgets.widget({
      
     var tree=d3.layout.phylotree(el).size ([height, width]).separation (function (a,b) {return 0;});
   
+    function default_tree_settings () {
+      tree.branch_length (null);
+      tree.branch_name (null);
+      tree.node_span ('equal');
+      tree.options ({'draw-size-bubbles' : false}, false);
+      tree.style_nodes (this.node_colorizer);
+      tree.style_edges (this.edge_colorizer);
+      tree.selection_label (current_selection_name);
+    };
+    
+    default_tree_settings();
+    
     return {"svg": svg, "tree": tree};
   },
 
@@ -216,17 +247,8 @@ HTMLWidgets.widget({
     var svg = instance.svg;
     var tree = instance.tree;
 
-    tree.node_span ('equal')
-        .options ({'draw-size-bubbles' : false}, false)
-        .font_size (14)
-        .scale_bar_font_size (12)
-        .node_circle_size (4);
-
     tree(d3_phylotree_newick_parser(newick_string)).svg(svg).layout();
-    
-    /* Dynamic resize */
-    this.makeResponsive(el);
-    
+     
     /* Add tools */
     
     $("#expand_spacing").on ("click", function (e) {
@@ -263,6 +285,8 @@ HTMLWidgets.widget({
     $("#sort_descending").on ("click", function (e) {
       sort_nodes (false);
     });
+    
+    /* Selection events */
     
     $("#mp_label").on ("click", function (e) {
       tree.max_parsimony (true);
@@ -310,6 +334,20 @@ HTMLWidgets.widget({
       tree.modify_selection (function (d) { return !d3_phylotree_is_leafnode (d.target) ? d.target[current_selection_name] : false;});
     });
     
+    /* Filtering */
+    
+    $("#branch_filter").on ("input propertychange", function (e) {
+      var filter_value = $(this).val();
+      var rx = new RegExp (filter_value,"i");
+      tree.modify_selection (function (n) {
+    return filter_value.length && (tree.branch_name () (n.target).search (rx)) != -1;
+      },"tag");
+
+    });
+    
+    /* Dynamic resize */
+    this.makeResponsive(el);
+   
   },
 
   resize: function(el, width, height, instance) {
@@ -329,6 +367,37 @@ HTMLWidgets.widget({
       svg.style.width = "100%";
       svg.style.height = "100%";
      }
-  }
+  },
+  
+  node_colorizer: function(element, data) {
+    try{
+      var count_class = 0;
+      selection_set.forEach (function (d,i) { if (data[d]) {count_class ++; element.style ("fill", color_scheme(i), i == current_selection_id ?  "important" : null);}});
+      if (count_class > 1){}
+      else {
+        if (count_class == 0) {
+            element.style ("fill", null);
+        }
+      };
+    }
+    catch (e) {}
+   },
+   
+   edge_colorizer: function(element, data) {
+     try {
+       var count_class = 0;
+       selection_set.forEach (function (d,i) { if (data[d]) {count_class ++; element.style ("stroke", color_scheme(i), i == current_selection_id ?  "important" : null);}});
+
+        if (count_class > 1) {
+          element.classed ("branch-multiple", true);
+        } else
+        if (count_class == 0) {
+             element.style ("stroke", null)
+                   .classed ("branch-multiple", false);
+        }
+      }
+    catch (e) {}
+
+    }
 
 });

@@ -7,6 +7,7 @@
 #' To learn more about phylowidget, start with the vignettes:
 #' \code{browseVignettes(package = "phylowidget")}
 #'
+#' @docType package
 #' @name phylowidget-package
 #'
 #' @import htmlwidgets

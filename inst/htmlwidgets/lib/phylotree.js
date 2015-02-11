@@ -985,7 +985,6 @@ d3.layout.phylotree = function (container) {
 
 
   phylotree.svg = function (svg_element) {
-      console.log(svg_element);
       if (!arguments.length) return default_scale_attribute;
       if (!( svg === svg_element)) {
           svg = svg_element;

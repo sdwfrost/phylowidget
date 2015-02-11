@@ -7,7 +7,159 @@ HTMLWidgets.widget({
   initialize: function(el, width, height) {
     
     /* Set up toolbar */
+    this.toolbar_setup(el);
     
+    /* Add selection widget */
+    this.selection_menu_setup(el);
+    
+    /* Some global variables */
+    selection_set = ['Foreground'];
+    current_selection_name = $("#selection_name_box").val();
+    current_selection_id = 0;
+    max_selections       = 10;
+    color_scheme = d3.scale.category10();
+    selection_menu_element_action = "phylotree_menu_element_action";
+    
+    /* Add SVG tree container */
+    var svg=d3.select(el).append("svg")
+     .attr("width",width)
+     .attr("height",height);
+     
+    var tree=d3.layout.phylotree(el).size ([height, width]).separation (function (a,b) {return 0;});
+    
+    this.default_tree_settings(tree);
+    
+    return {"svg": svg, "tree": tree};
+  },
+
+  renderValue: function(el, x, instance) {
+    var newick_string = x.nwk;
+    var svg = instance.svg;
+    var tree = instance.tree;
+
+    tree(d3_phylotree_newick_parser(newick_string)).svg(svg).layout();
+     
+    /* Add tools */
+    
+    $("#expand_spacing").on ("click", function (e) {
+    tree.spacing_x (tree.spacing_x() + 1).update(true);
+    });
+    
+    $("#compress_spacing").on ("click", function (e) {
+    tree.spacing_x (tree.spacing_x() - 1).update(true);
+    });
+
+    function sort_nodes (asc) {
+      tree.traverse_and_compute (function (n) {
+        var d = 1;
+        if (n.children && n.children.length) {
+          d += d3.max (n.children, function (d) { return d["count_depth"];});
+        }
+        n["count_depth"] = d;
+      });
+      tree.resort_children (function (a,b) {
+        return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
+      });
+    }
+
+    $("#sort_original").on ("click", function (e) {
+      tree.resort_children (function (a,b) {
+        return a["original_child_order"] - b["original_child_order"];
+      });
+    });
+
+    $("#sort_ascending").on ("click", function (e) {
+      sort_nodes (true);
+    });
+
+    $("#sort_descending").on ("click", function (e) {
+      sort_nodes (false);
+    });
+    
+    /* Selection events */
+    
+    $("#mp_label").on ("click", function (e) {
+      tree.max_parsimony (true);
+    });
+
+
+    $("#and_label").on ("click", function (e) {
+      tree.internal_label (function (d) { return d.reduce (function (prev, curr) {return curr[current_selection_name] && prev; }, true)}, true);
+    });
+
+    $("#or_label").on ("click", function (e) {
+      tree.internal_label (function (d) { return d.reduce (function (prev, curr) {return curr[current_selection_name] || prev; }, false)}, true);
+    });
+
+    $("#filter_add").on ("click", function (e) {
+      tree.modify_selection (function (d) { return d.tag || d[current_selection_name];}, current_selection_name, false, true)
+        .modify_selection (function (d) { return false; }, "tag", false, false);
+    });
+
+    $("#filter_remove").on ("click", function (e) {
+      tree.modify_selection (function (d) { return !d.tag;});
+    });
+
+    $("#select_all").on ("click", function (e) {
+      tree.modify_selection (function (d) { return true;});
+    });
+
+    $("#select_all_internal").on ("click", function (e) {
+      tree.modify_selection (function (d) { return !d3_phylotree_is_leafnode (d.target);});
+    });
+
+    $("#select_all_leaves").on ("click", function (e) {
+      tree.modify_selection (function (d) { return d3_phylotree_is_leafnode (d.target);});
+    });
+
+    $("#select_none").on ("click", function (e) {
+      tree.modify_selection (function (d) { return false;});
+    });
+
+    $("#clear_internal").on ("click", function (e) {
+      tree.modify_selection (function (d) { return d3_phylotree_is_leafnode (d.target) ? d.target[current_selection_name] : false;});
+    });
+
+    $("#clear_leaves").on ("click", function (e) {
+      tree.modify_selection (function (d) { return !d3_phylotree_is_leafnode (d.target) ? d.target[current_selection_name] : false;});
+    });
+    
+    /* Filtering */
+    
+    $("#branch_filter").on ("input propertychange", function (e) {
+      var filter_value = $(this).val();
+      var rx = new RegExp (filter_value,"i");
+      tree.modify_selection (function (n) {
+    return filter_value.length && (tree.branch_name () (n.target).search (rx)) != -1;
+      },"tag");
+
+    });
+    
+    /* Dynamic resize */
+    this.makeResponsive(el);
+   
+  },
+
+  resize: function(el, width, height, instance) {
+    var svg=d3.select("#"+el.id+" svg")
+     .attr("width",width)
+     .attr("height",height);
+     
+      instance.tree.size ([height, width]).layout();
+  },
+  
+  makeResponsive: function(el){
+     var svg = el.getElementsByTagName("svg")[0];
+     if(svg){
+      svg.setAttribute("viewBox", "0 0 " + svg.getAttribute("width") + " " + svg.getAttribute("height"))
+      if(svg.width) {svg.removeAttribute("width")};
+      if(svg.height) {svg.removeAttribute("height")};
+      svg.style.width = "100%";
+      svg.style.height = "100%";
+     }
+  },
+  
+  toolbar_setup: function(el){
     var toolbar=d3.select(el).append("div")
       .attr("class","btn-toolbar");
     
@@ -53,9 +205,9 @@ HTMLWidgets.widget({
       .attr("text","Restore original order")
       .append("i")
       .attr("class","fa fa-sort");
-    
-    /* Add selection widget */
-    
+  },
+  
+  selection_menu_setup: function(el){
     var inputgroupcontainer=d3.select(el).append("div")
       .attr("class","input-group");
     
@@ -199,8 +351,8 @@ HTMLWidgets.widget({
       .attr("href","#")
       .attr("id","or_label")
       .text("Label internal nodes using disjunction (OR)");
-
-    /* Filtering */
+      
+     /* Filtering */
     
     var branchfilter=inputgroupcontainer.append("div")
       .attr("class","form-group navbar-form navbar-right")
@@ -209,164 +361,6 @@ HTMLWidgets.widget({
       .attr("id","branch_filter")
       .attr("class","form-control")
       .attr("placeholder","Filter branches on");
-    
-    /* Some global variables */
-    
-    selection_set = ['Foreground'];
-    current_selection_name = $("#selection_name_box").val();
-    current_selection_id = 0;
-    max_selections       = 10;
-    color_scheme = d3.scale.category10();
-    selection_menu_element_action = "phylotree_menu_element_action";
-    
-    /* Add SVG tree container */
-    
-    var svg=d3.select(el).append("svg")
-     .attr("width",width)
-     .attr("height",height);
-     
-    var tree=d3.layout.phylotree(el).size ([height, width]).separation (function (a,b) {return 0;});
-  
-    function default_tree_settings () {
-      tree.branch_length (null);
-      tree.branch_name (null);
-      tree.node_span ('equal');
-      tree.options ({'draw-size-bubbles' : false}, false);
-      tree.style_nodes (this.node_colorizer);
-      tree.style_edges (this.edge_colorizer);
-      tree.selection_label (current_selection_name);
-    };
-    
-    default_tree_settings();
-    
-    return {"svg": svg, "tree": tree};
-  },
-
-  renderValue: function(el, x, instance) {
-    var newick_string = x.nwk;
-    var svg = instance.svg;
-    var tree = instance.tree;
-
-    tree(d3_phylotree_newick_parser(newick_string)).svg(svg).layout();
-     
-    /* Add tools */
-    
-    $("#expand_spacing").on ("click", function (e) {
-    tree.spacing_x (tree.spacing_x() + 1).update(true);
-    });
-    
-    $("#compress_spacing").on ("click", function (e) {
-    tree.spacing_x (tree.spacing_x() - 1).update(true);
-    });
-
-    function sort_nodes (asc) {
-      tree.traverse_and_compute (function (n) {
-        var d = 1;
-        if (n.children && n.children.length) {
-          d += d3.max (n.children, function (d) { return d["count_depth"];});
-        }
-        n["count_depth"] = d;
-      });
-      tree.resort_children (function (a,b) {
-        return (a["count_depth"] - b["count_depth"]) * (asc ? 1 : -1);
-      });
-    }
-
-    $("#sort_original").on ("click", function (e) {
-      tree.resort_children (function (a,b) {
-        return a["original_child_order"] - b["original_child_order"];
-      });
-    });
-
-    $("#sort_ascending").on ("click", function (e) {
-      sort_nodes (true);
-    });
-
-    $("#sort_descending").on ("click", function (e) {
-      sort_nodes (false);
-    });
-    
-    /* Selection events */
-    
-    $("#mp_label").on ("click", function (e) {
-      tree.max_parsimony (true);
-    });
-
-
-    $("#and_label").on ("click", function (e) {
-      tree.internal_label (function (d) { return d.reduce (function (prev, curr) {return curr[current_selection_name] && prev; }, true)}, true);
-    });
-
-    $("#or_label").on ("click", function (e) {
-      tree.internal_label (function (d) { return d.reduce (function (prev, curr) {return curr[current_selection_name] || prev; }, false)}, true);
-    });
-
-    $("#filter_add").on ("click", function (e) {
-      tree.modify_selection (function (d) { return d.tag || d[current_selection_name];}, current_selection_name, false, true)
-        .modify_selection (function (d) { return false; }, "tag", false, false);
-    });
-
-    $("#filter_remove").on ("click", function (e) {
-      tree.modify_selection (function (d) { return !d.tag;});
-    });
-
-    $("#select_all").on ("click", function (e) {
-      tree.modify_selection (function (d) { return true;});
-    });
-
-    $("#select_all_internal").on ("click", function (e) {
-      tree.modify_selection (function (d) { return !d3_phylotree_is_leafnode (d.target);});
-    });
-
-    $("#select_all_leaves").on ("click", function (e) {
-      tree.modify_selection (function (d) { return d3_phylotree_is_leafnode (d.target);});
-    });
-
-    $("#select_none").on ("click", function (e) {
-      tree.modify_selection (function (d) { return false;});
-    });
-
-    $("#clear_internal").on ("click", function (e) {
-      tree.modify_selection (function (d) { return d3_phylotree_is_leafnode (d.target) ? d.target[current_selection_name] : false;});
-    });
-
-    $("#clear_leaves").on ("click", function (e) {
-      tree.modify_selection (function (d) { return !d3_phylotree_is_leafnode (d.target) ? d.target[current_selection_name] : false;});
-    });
-    
-    /* Filtering */
-    
-    $("#branch_filter").on ("input propertychange", function (e) {
-      var filter_value = $(this).val();
-      var rx = new RegExp (filter_value,"i");
-      tree.modify_selection (function (n) {
-    return filter_value.length && (tree.branch_name () (n.target).search (rx)) != -1;
-      },"tag");
-
-    });
-    
-    /* Dynamic resize */
-    this.makeResponsive(el);
-   
-  },
-
-  resize: function(el, width, height, instance) {
-    var svg=d3.select("#"+el.id+" svg")
-     .attr("width",width)
-     .attr("height",height);
-     
-      instance.tree.size ([height, width]).layout();
-  },
-  
-  makeResponsive: function(el){
-     var svg = el.getElementsByTagName("svg")[0];
-     if(svg){
-      svg.setAttribute("viewBox", "0 0 " + svg.getAttribute("width") + " " + svg.getAttribute("height"))
-      if(svg.width) {svg.removeAttribute("width")};
-      if(svg.height) {svg.removeAttribute("height")};
-      svg.style.width = "100%";
-      svg.style.height = "100%";
-     }
   },
   
   node_colorizer: function(element, data) {
@@ -398,6 +392,16 @@ HTMLWidgets.widget({
       }
     catch (e) {}
 
+    },
+    
+    default_tree_settings: function(tree) {
+      tree.branch_length (null);
+      tree.branch_name (null);
+      tree.node_span ('equal');
+      tree.options ({'draw-size-bubbles' : false}, false);
+      tree.style_nodes (this.node_colorizer);
+      tree.style_edges (this.edge_colorizer);
+      tree.selection_label (current_selection_name);
     }
 
 });

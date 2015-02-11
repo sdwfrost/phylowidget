@@ -56,8 +56,54 @@ HTMLWidgets.widget({
     
     /* Add selection widget */
     
-    var selectioncontainer=d3.select(el).append("div")
+    var inputgroupcontainer=d3.select(el).append("div")
       .attr("class","input-group");
+    
+    var inputgroup=inputgroupcontainer.append("span")
+      .attr("class","input-group-btn");
+      
+    var inputmenubutton=inputgroup.append("button")
+      .attr("type","button")
+      .attr("class","btn btn-default dropdown-toggle")
+      .attr("data-toggle","dropdown")
+      .text("Tag ")
+      .append("span")
+      .attr("class","caret");
+    
+    var inputmenu=inputgroup.append("ul")
+      .attr("class","dropdown-menu")
+      .attr("id","selection_name_dropdown");
+
+    var selectionnewbutton=inputmenu.append("li")
+      .attr("id","selection_new")
+      .append("a")
+      .attr("href","#")
+      .text("New selection set");
+      
+    var selectiondelbutton=inputmenu.append("li")
+      .attr("id","selection_delete")
+      .attr("class","disabled")
+      .append("a")
+      .attr("href","#")
+      .text("Delete selection set");
+    
+    var selectionrenamebutton=inputmenu.append("li")
+      .attr("id","selection_rename")
+      .append("a")
+      .attr("href","#")
+      .text("Rename selection set");
+      
+    var selectionrenamebutton=inputmenu.append("li")
+      .attr("class","divider");
+    
+    var selectionnamebox=inputgroupcontainer.append("input")
+      .attr("type","text")
+      .attr("class","form-control")
+      .attr("value","Foreground")
+      .attr("id","selection_name_box")
+      .attr("disabled","true");
+      
+    
     
     /* Add SVG tree container */
     

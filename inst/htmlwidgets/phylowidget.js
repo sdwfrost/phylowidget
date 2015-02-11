@@ -27,6 +27,8 @@ HTMLWidgets.widget({
         .node_circle_size (4);
 
     tree(d3_phylotree_newick_parser(newick_string)).svg(svg).layout();
+    
+    this.makeResponsive(el);
   },
 
   resize: function(el, width, height, instance) {
@@ -35,9 +37,17 @@ HTMLWidgets.widget({
      .attr("height",height);
      
       instance.tree.size ([height, width]).layout();
-  }
+  },
   
- 
-    
+  makeResponsive: function(el){
+     var svg = el.getElementsByTagName("svg")[0];
+     if(svg){
+      svg.setAttribute("viewBox", "0 0 " + svg.getAttribute("width") + " " + svg.getAttribute("height"))
+      if(svg.width) {svg.removeAttribute("width")};
+      if(svg.height) {svg.removeAttribute("height")};
+      svg.style.width = "100%";
+      svg.style.height = "100%";
+     }
+  }
 
 });

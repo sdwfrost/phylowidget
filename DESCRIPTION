@@ -1,11 +1,15 @@
 Package: phylowidget
 Title: phylowidget
 Version: 0.1
-Authors@R: person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+Authors@R: person("First", "Last", , "first.last@example.com", role = c("aut",
+    "cre"))
 Description: Interactive display of phylogenies
-Depends: R (>= 3.1.1)
+Depends:
+    R (>= 3.1.1)
 Imports:
     htmlwidgets
 License: MIT
 LazyData: true
 Authors: The Hackout2 Team
+Suggests: knitr, ape
+VignetteBuilder: knitr

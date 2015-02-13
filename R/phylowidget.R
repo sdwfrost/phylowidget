@@ -104,9 +104,9 @@ phyloshiny <- function(nwk) {
       }
       else{
         if (input$close>0){
-          tree <<- renderPrint({input$tree})
+          tree <<- input$tree
+          print(tree)
           stopApp()
-          return(tree)
         }
       }
       })

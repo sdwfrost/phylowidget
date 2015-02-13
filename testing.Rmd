@@ -14,5 +14,5 @@ Now try with Shiny.
 
 ```{r}
 library(shiny)
-phyloshiny(nwk)
+taggedtree <- phyloshiny(nwk)
 ```

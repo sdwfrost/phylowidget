@@ -1,5 +1,5 @@
 ```{r}
-devtools::install()                        # install the package so we can try it
+devtools::install() # install the package so we can try it
 ```
 
 Now run in a browser.

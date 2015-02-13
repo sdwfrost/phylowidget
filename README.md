@@ -15,4 +15,4 @@ nwk <- "(((EELA:0.150276,CONGERA:0.213019):0.230956,(EELB:0.263487,CONGERB:0.202
 phylowidget(nwk)
 ```
 
-A standalone version can be found in the ```standalone``` folder.
+A standalone version can be found in the ```inst/standalone``` folder.

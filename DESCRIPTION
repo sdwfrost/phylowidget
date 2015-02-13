@@ -1,11 +1,16 @@
 Package: phylowidget
 Title: phylowidget
 Version: 0.1
-Authors@R: person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
+Date: 2015-02-13
+Author: Simon Frost <sdwfrost@gmail.com> and the Hackout2 Team
+Maintainer: Simon Frost <sdwfrost@gmail.com>
 Description: Interactive display of phylogenies
 Depends: R (>= 3.1.1)
 Imports:
-    htmlwidgets
-License: MIT
+    htmlwidgets,
+    ape
+Suggests:
+    shiny
+License: MIT + file LICENSE
 LazyData: true
-Authors: The Hackout2 Team
+

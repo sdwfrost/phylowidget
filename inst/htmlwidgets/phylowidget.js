@@ -24,11 +24,22 @@ HTMLWidgets.widget({
     var svg=d3.select(el).append("svg")
      .attr("width",width)
      .attr("height",height);
-     
-    var tree=d3.layout.phylotree(el).size ([height, width]).separation (function (a,b) {return 0;});
+    
+    /* Make tree global */ 
+    tree=d3.layout.phylotree(el).size ([height, width]).separation (function (a,b) {return 0;});
     
     this.default_tree_settings(tree);
     
+    /* Add event listeners */
+    $("#selection_new").get(0).addEventListener(selection_menu_element_action,this.selection_handler_new,false);
+    $("#selection_rename").get(0).addEventListener(selection_menu_element_action,this.selection_handler_rename,false);
+    $("#selection_delete").get(0).addEventListener(selection_menu_element_action,this.selection_handler_delete,false);
+    $("#selection_delete").get(0).dispatchEvent (new CustomEvent (selection_menu_element_action,{'detail' : ['cancel', null]}));
+    $("#selection_name_box").get(0).addEventListener(selection_menu_element_action,this.selection_handler_name_box,false);
+    $("#save_selection_name").get(0).addEventListener(selection_menu_element_action,this.selection_handler_save_selection_name,false);
+    $("#selection_name_dropdown").get(0).addEventListener(selection_menu_element_action,this.selection_handler_name_dropdown,false);
+    this.update_selection_names();
+
     return {"svg": svg, "tree": tree};
   },
 
@@ -168,6 +179,94 @@ HTMLWidgets.widget({
     return filter_value.length && (tree.branch_name () (n.target).search (rx)) != -1;
       },"tag");
 
+    // Need to tidy below
+
+    var valid_id = new RegExp ("^[\\w]+$");
+
+$("#selection_name_box").on ("input propertychange", function (e) {
+   var name = $(this).val();
+
+   var accept_name = (selection_set.indexOf (name) < 0) &&
+                     valid_id.exec (name) ;
+
+   d3.select ("#save_selection_button").classed ("disabled", accept_name ? null : true );
+});
+
+$("#selection_rename > a").on ("click", function (e) {
+
+    d3.select ("#save_selection_button")
+           .classed ("disabled",true)
+           .on ("click", function (e) { // save selection handler
+                var old_selection_name = current_selection_name;
+                selection_set[current_selection_id] = current_selection_name = $("#selection_name_box").val();
+
+                if (old_selection_name != current_selection_name) {
+                    tree.update_key_name (old_selection_name, current_selection_name);
+                    this.update_selection_names (current_selection_id);
+                }
+                send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
+                             {'detail' : ['save', this]}));
+           });
+
+    d3.select ("#cancel_selection_button")
+               .classed ("disabled",false)
+               .on ("click", function (e) { // save selection handler
+                    $("#selection_name_box").val(current_selection_name);
+                    send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
+                                 {'detail' : ['cancel', this]}));
+              });
+
+    send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
+                                 {'detail' : ['rename', this]}));
+    e.preventDefault    ();
+});
+
+$("#selection_delete > a").on ("click", function (e) {
+
+    tree.update_key_name (selection_set[current_selection_id], null)
+    selection_set.splice (current_selection_id, 1);
+
+    if (current_selection_id > 0) {
+        current_selection_id --;
+    }
+    current_selection_name = selection_set[current_selection_id];
+    this.update_selection_names (current_selection_id)
+    $("#selection_name_box").val(current_selection_name)
+
+
+    send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
+                                 {'detail' : ['save', this]}));
+    e.preventDefault    ();
+
+});
+
+$("#selection_new > a").on ("click", function (e) {
+
+    d3.select ("#save_selection_button")
+               .classed ("disabled",true)
+               .on ("click", function (e) { // save selection handler
+                    current_selection_name = $("#selection_name_box").val();
+                    current_selection_id = selection_set.length;
+                    selection_set.push (current_selection_name);
+                    this.update_selection_names (current_selection_id);
+                    send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
+                                 {'detail' : ['save', this]}));
+              });
+
+     d3.select ("#cancel_selection_button")
+               .classed ("disabled",false)
+               .on ("click", function (e) { // save selection handler
+                    $("#selection_name_box").val(current_selection_name);
+                    send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,
+                                 {'detail' : ['cancel', this]}));
+              });
+
+      this.send_click_event_to_menu_objects (new CustomEvent (selection_menu_element_action,{'detail' : ['new', this]}));
+      e.preventDefault    ();
+    });
+
+    // Need to tidy above
+
     });
     
     /* Dynamic resize */
@@ -286,7 +385,7 @@ HTMLWidgets.widget({
       
     var selectiondelbutton=inputmenu.append("li")
       .attr("id","selection_delete")
-      .attr("class","disabled")
+      //.attr("class","disabled")
       .append("a")
       .attr("href","#")
       .text("Delete selection set");
@@ -468,5 +567,68 @@ HTMLWidgets.widget({
             }
        );
       return tagged_tree;
+    },
+
+    send_click_event_to_menu_objects: function(e) {
+    $("#selection_new, #selection_delete, #selection_rename, #save_selection_name, #selection_name_box, #selection_name_dropdown").get().forEach (
+        function (d) {
+            d.dispatchEvent (e);
+        }
+    );
+    },
+  
+    update_selection_names: function(id, skip_rebuild) {
+
+      skip_rebuild = skip_rebuild || false;
+      id = id || 0;
+
+
+      current_selection_name = selection_set[id];
+      current_selection_id = id;
+
+      if (!skip_rebuild) {
+        d3.selectAll (".selection_set").remove();
+
+        d3.select ("#selection_name_dropdown")
+          .selectAll (".selection_set")
+          .data (selection_set)
+          .enter()
+          .append ("li")
+          .attr ("class", "selection_set")
+          .append ("a")
+          .attr ("href", "#")
+          .text (function (d) { return d;})
+          .style ("color", function (d,i) {return color_scheme(i);})
+          .on ("click", function (d,i) {update_selection_names (i,true);});
+
+      }
+
+
+      d3.select ("#selection_name_box")
+        .style ("color",  color_scheme(id))
+        .property ("value", current_selection_name);
+
+      tree.selection_label (selection_set[id]);
+    },
+
+    selection_handler_new: function(e) {
+    var element = d3.select (this);
+    $(this).data('tooltip', false);
+    switch (e.detail[0]) {
+        case 'save':
+        case 'cancel':
+            if (selection_set.length == max_selections) {
+                element.classed ("disabled", true);
+                    $(this).tooltip ({'title' : 'Up to ' + max_selections + ' are allowed', 'placement' : 'left'});
+            } else {
+                element.classed ("disabled", null);
+            }
+            break;
+        default:
+            element.classed ("disabled", true);
+            break;
+
+      }
     }
+
 });

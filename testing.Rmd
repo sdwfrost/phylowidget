@@ -10,20 +10,9 @@ nwk <- "(((EELA:0.150276,CONGERA:0.213019):0.230956,(EELB:0.263487,CONGERB:0.202
 phylowidget(nwk)
 ```
 
-Now try with Shiny (interactive code below); at the moment, this is only showing in the browser.
+Now try with Shiny.
 
 ```{r}
 library(shiny)
-library(htmlwidgets)
-library(phylowidget)
-ui <- shinyUI(fluidPage(
-  phylowidgetOutput("phylowidget")
-))
-server <- function(input,output){
-  output$phylowidget <- renderPhylowidget(
-    phylowidget(nwk)
-  )
-}
-app <- shinyApp(ui = ui, server = server)
-runApp(app,launch.browser=TRUE)
+phyloshiny(nwk)
 ```

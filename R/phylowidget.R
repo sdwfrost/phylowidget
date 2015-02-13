@@ -79,6 +79,13 @@ renderPhylowidget <- function(expr, env = parent.frame(), quoted = FALSE) {
 #' phyloshiny A phylowidget as a Shiny app
 #' @param nwk Either a Newick string or a \code{phylo} or \code{multiPhylo} object.
 #' 
+#' @examples
+#' \dontrun{
+#' library(ape)
+#' data(bird.orders)
+#' phyloshiny(bird.orders)
+#' }
+#' 
 #' @seealso phylowidget
 #' @export
 phyloshiny <- function(nwk) {
@@ -91,6 +98,18 @@ phyloshiny <- function(nwk) {
       output$phylowidget <- renderPhylowidget(
         phylowidget(nwk)
       )
+      observe({
+      if(is.null(input$close)){
+        return()
+      }
+      else{
+        if (input$close>0){
+          tree <<- renderPrint({input$tree})
+          stopApp()
+          return(tree)
+        }
+      }
+      })
     }
   )
 }

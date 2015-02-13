@@ -75,7 +75,42 @@ HTMLWidgets.widget({
     $("#sort_descending").on ("click", function (e) {
       sort_nodes (false);
     });
+
+    $("#save_tree").on ("click", function (e) {
+      var tagged_tree=tree.get_newick (
+            function (node) {
+                var tags = [];
+                selection_set.forEach (function (d) { if (node[d]) {tags.push(d)}; });
+                if (tags.length) {
+                    return "{" + tags.join (",") + "}";
+                }
+                return "";
+            }
+       );
+      var blob = new Blob([tagged_tree], {type: "text/plain;charset=utf-8"});
+      saveAs(blob, "phylowidget_tree.nwk");
+    });
     
+    $("#exit_widget").on ("click", function (e) {
+      if (confirm("Close phylowidget?")) {
+        if("Shiny" in window){
+          var tagged_tree=tree.get_newick (
+            function (node) {
+                var tags = [];
+                selection_set.forEach (function (d) { if (node[d]) {tags.push(d)}; });
+                if (tags.length) {
+                    return "{" + tags.join (",") + "}";
+                }
+                return "";
+            }
+          );
+          Shiny.onInputChange("tree",tagged_tree);
+          Shiny.onInputChange("close",1);
+        }
+        window.close();
+      }
+    });
+
     /* Selection events */
     
     $("#mp_label").on ("click", function (e) {
@@ -205,6 +240,23 @@ HTMLWidgets.widget({
       .attr("text","Restore original order")
       .append("i")
       .attr("class","fa fa-sort");
+
+    var savebutton=btngroup.append("button")
+      .attr("type","button")
+      .attr("class","btn btn-default btn-sm")
+      .attr("id","save_tree")
+      .attr("text","Save tree")
+      .append("i")
+      .attr("class","fa fa-floppy-o");
+
+    var exitbutton=btngroup.append("button")
+      .attr("type","button")
+      .attr("class","btn btn-default btn-sm")
+      .attr("id","exit_widget")
+      .attr("text","Exit")
+      .append("i")
+      .attr("class","fa fa-close");
+ 
   },
   
   selection_menu_setup: function(el){
@@ -402,6 +454,19 @@ HTMLWidgets.widget({
       tree.style_nodes (this.node_colorizer);
       tree.style_edges (this.edge_colorizer);
       tree.selection_label (current_selection_name);
+    },
+    
+    get_tagged_tree: function(tree){
+       var tagged_tree=tree.get_newick (
+            function (node) {
+                var tags = [];
+                selection_set.forEach (function (d) { if (node[d]) {tags.push(d)}; });
+                if (tags.length) {
+                    return "{" + tags.join (",") + "}";
+                }
+                return "";
+            }
+       );
+      return tagged_tree;
     }
-
 });

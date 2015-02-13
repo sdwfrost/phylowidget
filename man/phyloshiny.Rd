@@ -12,6 +12,13 @@ phyloshiny(nwk)
 \description{
 phyloshiny A phylowidget as a Shiny app
 }
+\examples{
+\dontrun{
+library(ape)
+data(bird.orders)
+phyloshiny(bird.orders)
+}
+}
 \seealso{
 phylowidget
 }

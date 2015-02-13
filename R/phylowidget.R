@@ -1,10 +1,11 @@
 #' phylowidget Phylogeny widget
 #'
-#' An interactive phylogeny viewer using D3.js, based on phylotree.js
+#' An interactive phylogeny viewer using D3.js, based on phylotree.js. Just supply
+#' a \code{Newick} string or \code{phylo} data as the parameter.
 #' 
-#' @param nwk Either a Newick string or a \code{phylo} or \code{multiPhylo} object.
-#' @param width The width of the device.
-#' @param height The height of the device.
+#' @param nwk Newick string or \code{phylo} from the \code{\link[ape]{ape}} package.
+#' @param width Integer in px to override the default width. The default width fills the browser window.
+#' @param height Integer in px to override the default height. The default height fills the browser window.
 #' 
 #' @note
 #' This displays a phylogeny in a browser window; by default, the viewer is disabled.
@@ -13,15 +14,14 @@
 #' \code{phylotree.js} \url{http://github.com/veg/phylotree.js}
 #' 
 #' @examples
-#' ## dontrun
+#' \dontrun{
 #' # A stand-alone example
 #' library(ape)
 #' data(bird.orders)
 #' phylowidget(bird.orders)
-#' 
+#' }
 #' 
 #' @import htmlwidgets
-#' @import ape
 #' @export
 phylowidget <- function(nwk, width = NULL, height = NULL) {
 

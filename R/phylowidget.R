@@ -76,6 +76,44 @@ renderPhylowidget <- function(expr, env = parent.frame(), quoted = FALSE) {
   shinyRenderWidget(expr, phylowidgetOutput, env, quoted = TRUE)
 }
 
+#' phylowidget	get data into D3 structure so that key 'name' matches D3 tip labels
+#' @import RJSONIO plyr
+phylowidget.with_tip_data.formatter <- function(tipdata) 
+{ 	
+	tmp			<- dlply(as.data.frame(tipdata), .(LABEL), .fun=function(d){ list(name=d[['LABEL']][1], DATA=list(X=d[['X']], Y=d[['Y']])) })
+	names(tmp)	<- NULL	
+	#cat(toJSON(tmp))
+	tmp
+}
+
+#' phylowidget Phylogeny widget with tip data
+#'
+#' An interactive phylogeny viewer using D3.js, based on phylotree.js. Just supply
+#' a \code{Newick} string and a data frame with tip data as shown in the Example.
+#' @import data.table 
+#' @example example/phylowidget_with_tip_data_ex.R
+#' @export
+phylowidget.with_tip_data <- function(nwk, tipdata=NULL, width = NULL, height = NULL) {
+	
+	# forward options using x
+	x = list(
+			nwk=nwk,
+			tipdata= phylowidget.with_tip_data.formatter(tipdata)
+	)
+	
+	# create widget
+	htmlwidgets::createWidget(
+			name = 'phylowidget_with_tip_data',
+			x,
+			width = width,
+			height = height,
+			sizingPolicy = htmlwidgets::sizingPolicy(viewer.suppress = TRUE,
+					browser.fill = TRUE,
+					browser.padding = 0),
+			package = 'phylowidget'
+	)
+}
+
 #' phyloshiny A phylowidget as a Shiny app
 #' @param nwk Either a Newick string or a \code{phylo} or \code{multiPhylo} object.
 #' 
